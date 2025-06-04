@@ -12,7 +12,6 @@ export default function WritingTest() {
   const requiredWords = ["친구", "놀란", "강아지"];
   const [displayText, setDisplayText] = useState("");
   const predefinedText1 = "따스한 햇살이 골목길을 비추고, 나뭇잎 사이로 부는 바람이 잔잔한 소리를 냈다. 담벼락에는 고양이가 졸고 있었고, 창문 너머로 김이 서린 찻잔이 보였다. 조용한 거리에 어울리지 않게 어디선가 작은 발소리가 들려오고, 고개를 들어 소리가 난 곳을 찾아 두리번거리자 멀리서 낯선 그림자를 발견했다. "; // 미리 정해진 문장 삽입
-  const predefinedText2 = "예시문장2 ";
   const [preTextIndex, setPreTextIndex] = useState(0);
   const [isPreTextTyping, setIsPreTextTyping] = useState(""); // 타이핑 중인 글자 저장
   const [preTextTyping, setPreTextTyping] = useState("");   // 타이핑 중인 글자
@@ -23,9 +22,7 @@ export default function WritingTest() {
   const hello = "안녕하세요! 저는 글쓰기를 도와주기 위해 만들어진 AI 'DraftMind' 이에요. \n당신은 지금 이야기를 창작중인 것으로 보이네요. 당신의 글쓰기를 돕게 되어 기뻐요!"; // 인사말
   const fullText = "일반적인 글쓰기 원칙과 스토리텔링 전략에 기반해서 도움을 제공해드릴게요. \n글의 초반부에 배경을 자세히 묘사해서 이야기를 더욱 생생하게 만들어보세요. 이야기의 몰입감을 높이는 데에 도움이 될거에요.\n예시 문장을 제공해드릴게요!"; // AI 글쓰기 제안문구
   const examplePhrase1 = ["따스한 햇살이", "골목길을 비추고", "나뭇잎 사이로 부는 바람이", "잔잔한 소리를 냈다", "담벼락에는 고양이가 졸고 있었고", "창문 너머로", "김이 서린 찻잔이 보였다", "조용한 거리에", "어울리지 않게", "어디선가 작은 발소리가 들려오고", "고개를 들어", "소리가 난 곳을 찾아 두리번거리자", "멀리서 낯선 그림자를 발견했다"];  // 예시 구문들
-  const examplePhrase2 = ["예시 구문2"];
   const exampleKeywords1 = ["따스한", "햇살", "골목길", "비추고", "나뭇잎", "사이", "부는", "바람", "잔잔한", "소리", "냈다", "담벼락", "고양이", "졸고", "있었고", "창문", "너머", "김", "서린", "찻잔", "보였다", "조용한", "거리", "어울리지", "않게", "어디선가", "작은", "발소리", "들려오고", "고개", "들어", "난", "곳", "찾아", "두리번거리자", "멀리서", "낯선", "그림자", "발견했다"]; // 예시 단어들
-  const exampleKeywords2 = ["예시단어2"]; 
 
   const [typingIndex, setTypingIndex] = useState(0);
   const [helloIndex, setHelloIndex] = useState(0);
@@ -42,11 +39,7 @@ export default function WritingTest() {
   const [warning, setWarning] = useState("");
   const [missingWords, setMissingWords] = useState([]);
 
-  const [showSurveyModal, setShowSurveyModal] = useState(false);
-  const [surveyCompleted, setSurveyCompleted] = useState(false);
-  const [surveyAnswers, setSurveyAnswers] = useState([null, null, null, null]);
   const [startTypingFlow, setStartTypingFlow] = useState(false);  // 최초 트리거 시점
-
 
   const [selectedExampleIndex, setSelectedExampleIndex] = useState(null);  // 1 또는 2
   const [showExampleChoice, setShowExampleChoice] = useState(false);
@@ -110,24 +103,28 @@ export default function WritingTest() {
   const handleExampleChoice = (choiceIndex) => {
     setSelectedExampleIndex(choiceIndex);
     setShowExampleChoice(false);
+
+    const choiceMap = {
+      1: predefinedText1
+    };
   
-    const chosenText = choiceIndex === 1 ? predefinedText1 : predefinedText2;
+    const chosenText = choiceMap[choiceIndex] || "";
     setPreTextIndex(0);
     setPreTextTyping("");
     setOriginalText(text);
     setIsPreTextTyping(true);
-    setPredefinedText(chosenText); // predefinedText를 useState로 정의했는지 확인
+    setPredefinedText(chosenText);
   };
 
   useEffect(() => {
     if (wordCount >= 20 && !hasTriggeredOnce) {
       setIsInputDisabled(true); // ✅ 입력창 비활성화 추가
-      setShowSurveyModal(true); // 설문 팝업 띄우기
+      setHasTriggeredOnce(true); // 바로 다음 단계로 진행
     }
   }, [wordCount, hasTriggeredOnce]);
 
-useEffect(() => {
-    if (hasTriggeredOnce && surveyCompleted) {
+  useEffect(() => {
+    if (hasTriggeredOnce) {
       // 출력창 초기화 + 타이핑 효과 시작
       setDisplayText("");
       setTypingIndex(0);
@@ -145,7 +142,7 @@ useEffect(() => {
     
       return () => clearTimeout(timer); // 혹시 컴포넌트 unmount 시 타이머 제거
     }
-  }, [hasTriggeredOnce, surveyCompleted]);
+  }, [hasTriggeredOnce]);
 
   // 🪶 typingText 타이핑 효과 처리
   useEffect(() => {
@@ -224,15 +221,15 @@ useEffect(() => {
   
     if (isPreTextTyping && preTextIndex >= predefinedText.length) {
       setTimeout(() => {
-        if (!originalText.startsWith(predefinedText)) {
-          setText(predefinedText + originalText);   // 최종 텍스트 반영
+        if (!originalText.endsWith(predefinedText)) {
+          setText(originalText + " " + predefinedText);   // 최종 텍스트 반영
         } else {
           setText(originalText);   // 이미 삽입된 경우 유지
         }
 
         // ✅ 여기서 단어 수 갱신
-        const finalText = !originalText.startsWith(predefinedText)
-          ? predefinedText + originalText
+        const finalText = !originalText.endsWith(predefinedText)
+          ? originalText + " " + predefinedText
           : originalText;
 
         const words = finalText.trim().split(/\s+/);
@@ -281,13 +278,11 @@ useEffect(() => {
     try {
       // 예시 단어 및 구문 매핑
       const keywordMap = {
-        1: exampleKeywords1,
-        2: exampleKeywords2,
+        1: exampleKeywords1
       };
 
       const phraseMap = {
-        1: examplePhrase1,
-        2: examplePhrase2,
+        1: examplePhrase1
       };
 
       // 매칭 계산
@@ -304,8 +299,6 @@ useEffect(() => {
 
       const exampleWordCount = matchedWords.length;
       const examplePhraseCount = matchedPhrase.length;
-      const exampleWordSetLabel = `exampleKeywords${selectedExampleIndex}`;
-      const examplePhraseSetLabel = `examplePhrase${selectedExampleIndex}`;
 
 
 
@@ -325,19 +318,11 @@ useEffect(() => {
       const formattedKoreaTime = formatter.format(koreaTime);
 
       //firebase에 UID 포함하여 데이터에 저장
-      await addDoc(collection(db, "초기-2"), {
+      await addDoc(collection(db, "초기-1"), {
         SONAId: prolificId.trim(), // ✨ prolific ID 저장
         timestamp: formattedKoreaTime,  // ✅ 한국 시간으로 변환한 값 저장
-        // ✨ 설문 응답 추가 저장
-        PO_q1: surveyAnswers[0],
-        PO_q2: surveyAnswers[1],
-        PO_q3: surveyAnswers[2],
-        PO_q4: surveyAnswers[3],
-        selectedExampleIndex: selectedExampleIndex, // 선택한 predefinedText 번호 저장
-        exampleWordSource: exampleWordSetLabel, // 어떤 예시단어셋을 기준으로 했는지 저장
         exampleWordCount: exampleWordCount, // 예시단어 매칭개수
         exampleWords: matchedWords.join(", "), // 예시단어 매칭된 단어들
-        examplePhraseSource: examplePhraseSetLabel, // 어떤 예시구문셋을 기준으로 했는지 저장
         examplePhraseCount: examplePhraseCount, // 예시구문 매칭개수
         examplePhrases: matchedPhrase.join(", "), // 예시구문 매칭된 구문들
         text: text.trim(),
@@ -375,7 +360,7 @@ useEffect(() => {
 
         <textarea
           style={{ width: "100%", height: "200px", padding: "10px", border: "1px solid #ccc", fontSize: "16px" }}
-          value={isPreTextTyping ? preTextTyping + originalText : text}
+          value={isPreTextTyping ? originalText + " " + preTextTyping : text}
           onChange={(e) => handleChange(e)}
           placeholder="여기에 글을 작성해주세요..."
           disabled={isInputDisabled} // ✅ 비활성화 반영
@@ -473,19 +458,29 @@ useEffect(() => {
               {showExampleChoice && (
                 <div style={{ marginTop: "20px", backgroundColor: "#fff", padding: "15px", border: "1px dashed #aaa", borderRadius: "6px" }}>
                   <p style={{ fontWeight: "bold" }}>다음 중 당신의 글에 넣을 문장을 한가지 선택해주세요:</p>
-                  <p><strong>1.</strong> {predefinedText1}</p>
-                  <p><strong>2.</strong> {predefinedText2}</p>
-                  <div style={{ marginTop: "10px" }}>
-                    <button onClick={() => handleExampleChoice(1)} style={{ marginRight: "15px", padding: "8px 20px" }}>예시 1번 선택</button>
-                    <button onClick={() => handleExampleChoice(2)} style={{ padding: "8px 20px" }}>예시 2번 선택</button>
+
+                  {[predefinedText1].map((text, idx) => (
+                    <p key={idx}><strong>{idx + 1}.</strong> {text}</p>
+                  ))}
+
+                  <div style={{ marginTop: "10px", display: "flex", flexWrap: "wrap", gap: "10px" }}>
+                    {[1].map((index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleExampleChoice(index)}
+                        style={{ padding: "8px 16px" }}
+                      >
+                        예시 {index}번 선택
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}
             </>
           )}
         </div>
-        </div>
-        </div>
+      </div>
+    </div>
       {/* 경고 메시지 출력 */}
       {warning.length > 0 && (
           <div style={{ color: "red", fontWeight: "bold", fontSize: "16px", marginTop: "10px" }}>
@@ -508,87 +503,6 @@ useEffect(() => {
         }}>
         제출하기
       </button>
-
-      {showSurveyModal && (
-        <div style={{
-          position: "fixed",
-          top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: "rgba(0,0,0,0.5)",
-          display: "flex", justifyContent: "center", alignItems: "center",
-          zIndex: 9999
-        }}>
-          <div style={{
-            backgroundColor: "white",
-            padding: "30px",
-            borderRadius: "10px",
-            width: "600px",
-            boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
-            maxHeight: "90vh", overflowY: "auto"
-          }}>
-            <p>아래 문항에 동의하는 정도를 응답해주시기 바랍니다(1 =  전혀 그렇지 않다 ~ 7 = 매우 그렇다).</p>
-
-            {[
-              "나만의 것을 만들어낸 것 같은 느낌이 들었다.",
-              "내가 이 과제를 수행한 것에 대해 모든 공로를 받을 자격이 있다고 느꼈다.",
-              '스스로 "내가 해냈어!"라고 생각했다.',
-              "최종 결과물에 대한 소유감을 느꼈다."
-            ].map((question, qIndex) => (
-              <div key={qIndex} style={{ marginTop: "30px" }}>
-                <p style={{ marginBottom: "10px", fontWeight: "bold" }}>{question}</p>
-                
-                {/* 숫자 + 라벨 줄 */}
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px", alignItems: "center" }}>
-                  {[1, 2, 3, 4, 5, 6, 7].map((val, idx) => (
-                    <div key={val} style={{ flex: 1, textAlign: "center", fontSize: "12px", fontWeight: "bold", lineHeight: "1.4" }}>
-                      <div>{idx === 0 ? "전혀 그렇지 않다" : idx === 6 ? "매우 그렇다" : "\u00A0"}</div>
-                      <div>{val}</div>
-                    </div>
-                  ))}
-                </div>
-                
-                {/* 라디오 동그라미 줄 */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  {[1, 2, 3, 4, 5, 6, 7].map((val) => (
-                    <label key={val} style={{ textAlign: "center", flex: 1 }}>
-                      <input
-                        type="radio"
-                        name={`q${qIndex}`}
-                        value={val}
-                        checked={surveyAnswers[qIndex] === val}
-                        onChange={() => {
-                          const newAnswers = [...surveyAnswers];
-                          newAnswers[qIndex] = val;
-                          setSurveyAnswers(newAnswers);
-                        }}
-                      />
-                    </label>
-                  ))}
-                </div>
-              </div>
-            ))}
-
-            <button
-              disabled={surveyAnswers.includes(null)}
-              onClick={() => {
-                setShowSurveyModal(false);
-                setSurveyCompleted(true);
-                setHasTriggeredOnce(true);
-              }}
-              style={{
-                marginTop: "30px",
-                padding: "10px 20px",
-                backgroundColor: surveyAnswers.includes(null) ? "#ccc" : "#007bff",
-                color: "white",
-                border: "none",
-                cursor: surveyAnswers.includes(null) ? "not-allowed" : "pointer",
-                fontWeight: "bold"
-              }}
-          >
-              글쓰기 계속하기
-            </button>
-          </div>
-        </div>
-      )}
 
     </div>
   );
