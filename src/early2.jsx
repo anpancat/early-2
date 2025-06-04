@@ -22,8 +22,10 @@ export default function WritingTest() {
   const typingText = "...DraftMind가 입력중 입니다..."; //입력중
   const hello = "안녕하세요! 저는 글쓰기를 도와주기 위해 만들어진 AI 'DraftMind' 이에요. \n당신은 지금 이야기를 창작중인 것으로 보이네요. 당신의 글쓰기를 돕게 되어 기뻐요!"; // 인사말
   const fullText = "일반적인 글쓰기 원칙과 스토리텔링 전략에 기반해서 도움을 제공해드릴게요. \n글의 초반부에 배경을 자세히 묘사해서 이야기를 더욱 생생하게 만들어보세요. 이야기의 몰입감을 높이는 데에 도움이 될거에요.\n예시 문장을 제공해드릴게요!"; // AI 글쓰기 제안문구
-  const examplePhrase = ["따스한 햇살이", "골목길을 비추고", "나뭇잎 사이로 부는 바람이", "잔잔한 소리를 냈다", "담벼락에는 고양이가 졸고 있었고", "창문 너머로", "김이 서린 찻잔이 보였다", "조용한 거리에", "어울리지 않게", "어디선가 작은 발소리가 들려오고", "고개를 들어", "소리가 난 곳을 찾아 두리번거리자", "멀리서 낯선 그림자를 발견했다"];  // 예시 구문들
-  const exampleKeywords = ["따스한", "햇살", "골목길", "비추고", "나뭇잎", "사이", "부는", "바람", "잔잔한", "소리", "냈다", "담벼락", "고양이", "졸고", "있었고", "창문", "너머", "김", "서린", "찻잔", "보였다", "조용한", "거리", "어울리지", "않게", "어디선가", "작은", "발소리", "들려오고", "고개", "들어", "소리", "난", "곳", "찾아", "두리번거리자", "멀리서", "낯선", "그림자", "발견했다"]; // 예시 단어들
+  const examplePhrase1 = ["따스한 햇살이", "골목길을 비추고", "나뭇잎 사이로 부는 바람이", "잔잔한 소리를 냈다", "담벼락에는 고양이가 졸고 있었고", "창문 너머로", "김이 서린 찻잔이 보였다", "조용한 거리에", "어울리지 않게", "어디선가 작은 발소리가 들려오고", "고개를 들어", "소리가 난 곳을 찾아 두리번거리자", "멀리서 낯선 그림자를 발견했다"];  // 예시 구문들
+  const examplePhrase2 = ["예시 구문2"];
+  const exampleKeywords1 = ["따스한", "햇살", "골목길", "비추고", "나뭇잎", "사이", "부는", "바람", "잔잔한", "소리", "냈다", "담벼락", "고양이", "졸고", "있었고", "창문", "너머", "김", "서린", "찻잔", "보였다", "조용한", "거리", "어울리지", "않게", "어디선가", "작은", "발소리", "들려오고", "고개", "들어", "난", "곳", "찾아", "두리번거리자", "멀리서", "낯선", "그림자", "발견했다"]; // 예시 단어들
+  const exampleKeywords2 = ["예시단어2"]; 
 
   const [typingIndex, setTypingIndex] = useState(0);
   const [helloIndex, setHelloIndex] = useState(0);
@@ -266,7 +268,7 @@ useEffect(() => {
 
     // ✨ Qualtrics ID 미입력 시 에러 메시지 추가
     if (!prolificId.trim()) {
-      errorMessages.push("❌ SONA ID를 적어주세요.");
+      errorMessages.push("❌ 엠브레인 ID를 적어주세요.");
     }
 
 
@@ -277,19 +279,35 @@ useEffect(() => {
     }
 
     try {
-      // 예시 구문 매칭 개수 및 비율 계산
-      const matchedPhrase = examplePhrase.filter(phrase => text.trim().includes(phrase)); // 대소문자 구분없이 매칭
-      const examplePhraseCount = matchedPhrase.length; // 예시구문 매칭 개수
-      const examplePhraseRatio = +(examplePhraseCount / examplePhrase.length).toFixed(2); // 예시구문 반영비율
+      // 예시 단어 및 구문 매핑
+      const keywordMap = {
+        1: exampleKeywords1,
+        2: exampleKeywords2,
+      };
 
-      //예시 단어 매칭 개수 및 비율 계산
+      const phraseMap = {
+        1: examplePhrase1,
+        2: examplePhrase2,
+      };
+
+      // 매칭 계산
       const textWords = text.trim().match(/[가-힣]+/g) || [];
-      const matchedWords = exampleKeywords.filter(keyword =>
+      const selectedKeywords = keywordMap[selectedExampleIndex] || [];
+      const selectedPhrases = phraseMap[selectedExampleIndex] || [];
+
+      const matchedWords = selectedKeywords.filter(keyword =>
         textWords.some(word => word.includes(keyword))
       );
+      const matchedPhrase = selectedPhrases.filter(phrase =>
+        text.trim().includes(phrase)
+      );
 
-      const exampleWordCount = matchedWords.length; // 예시단어 매칭 개수
-      const exampleWordRatio = +(exampleWordCount / exampleKeywords.length).toFixed(2); // 예시단어 반영비율
+      const exampleWordCount = matchedWords.length;
+      const examplePhraseCount = matchedPhrase.length;
+      const exampleWordSetLabel = `exampleKeywords${selectedExampleIndex}`;
+      const examplePhraseSetLabel = `examplePhrase${selectedExampleIndex}`;
+
+
 
       // 현재 한국 시간(KST) 가져오기
       const koreaTime = new Date();
@@ -315,12 +333,12 @@ useEffect(() => {
         PO_q2: surveyAnswers[1],
         PO_q3: surveyAnswers[2],
         PO_q4: surveyAnswers[3],
-        selectedExampleIndex: selectedExampleIndex,
+        selectedExampleIndex: selectedExampleIndex, // 선택한 predefinedText 번호 저장
+        exampleWordSource: exampleWordSetLabel, // 어떤 예시단어셋을 기준으로 했는지 저장
         exampleWordCount: exampleWordCount, // 예시단어 매칭개수
-        exampleWordRatio: exampleWordRatio, // 예시단어 매칭비율
         exampleWords: matchedWords.join(", "), // 예시단어 매칭된 단어들
+        examplePhraseSource: examplePhraseSetLabel, // 어떤 예시구문셋을 기준으로 했는지 저장
         examplePhraseCount: examplePhraseCount, // 예시구문 매칭개수
-        examplePhraseRatio: examplePhraseRatio, // 예시구문 매칭비율
         examplePhrases: matchedPhrase.join(", "), // 예시구문 매칭된 구문들
         text: text.trim(),
         wordCount: wordCount
@@ -348,10 +366,11 @@ useEffect(() => {
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
           
       {/* 사용자가 글 작성하는 영역 */}
-      <div style={{ width: "80%", textAlign: "left", marginBottom: "10px", fontSize: "18px" }}> 
+      <div style={{ width: "80%", textAlign: "left", marginBottom: "5px", fontSize: "18px" }}> 
         <h1>📝 짧은 글 짓기</h1>
-        <p>아래 프롬프트에 한글로 이야기를 작성해주세요 (100-150 단어) 다음 제시어를 포함해야 합니다:</p>
-        <p style={{ color: "red", fontWeight: "bold", fontSize: "20px" }}>{requiredWords.join(", ")}</p>
+        <p>아래 프롬프트에 한글로 이야기를 작성해주세요. (100-150 단어) </p>
+        <p> 다음 제시어를 포함해야 합니다: </p>
+        <p style={{ color: "red", fontWeight: "bold", fontSize: "22px", marginTop: "5px"}}>{requiredWords.join(", ")}</p>
         <p className="mt-2">단어 수: {wordCount}</p>
 
         <textarea
@@ -453,12 +472,12 @@ useEffect(() => {
               {/* ✨ 예시 선택지 추가 블록 (프롬프트 출력 아래에 붙이기) */}
               {showExampleChoice && (
                 <div style={{ marginTop: "20px", backgroundColor: "#fff", padding: "15px", border: "1px dashed #aaa", borderRadius: "6px" }}>
-                  <p style={{ fontWeight: "bold" }}>Please select one of the example sentences to insert into your writing:</p>
+                  <p style={{ fontWeight: "bold" }}>다음 중 당신의 글에 넣을 문장을 한가지 선택해주세요:</p>
                   <p><strong>1.</strong> {predefinedText1}</p>
                   <p><strong>2.</strong> {predefinedText2}</p>
                   <div style={{ marginTop: "10px" }}>
-                    <button onClick={() => handleExampleChoice(1)} style={{ marginRight: "15px", padding: "8px 20px" }}>Choose 1</button>
-                    <button onClick={() => handleExampleChoice(2)} style={{ padding: "8px 20px" }}>Choose 2</button>
+                    <button onClick={() => handleExampleChoice(1)} style={{ marginRight: "15px", padding: "8px 20px" }}>예시 1번 선택</button>
+                    <button onClick={() => handleExampleChoice(2)} style={{ padding: "8px 20px" }}>예시 2번 선택</button>
                   </div>
                 </div>
               )}
@@ -477,7 +496,7 @@ useEffect(() => {
         )}
 
       <span style={{ marginTop: "10px", fontSize: "18px", color: "gray" }}>
-      🔔글을 제출한 후 반드시 설문을 완료해주세요.
+      🔔글을 제출한 후, 2-3초 뒤 설문 페이지로 넘어갑니다. 이어지는 설문을 반드시 완료해주세요.
       </span>
 
       {/* Submit 버튼 - 가장 아래로 배치 */}
